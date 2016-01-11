@@ -18,6 +18,7 @@ See notes at end for glyph nomenclature & other tidbits.
 */
 
 #include <stdio.h>
+#include <stdint.h>
 #include <ctype.h>
 #include <ft2build.h>
 #include FT_GLYPH_H
@@ -38,7 +39,7 @@ void enbit(uint8_t value) {
 				printf(", ");    //   Simple comma delim
 			}
 		}
-		printf("0x%02X", sum); // Write byte value
+		printf("16#%02X#", sum); // Write byte value
 		sum       = 0;         // Clear for next byte
 		bit       = 0x80;      // Reset bit counter
 		firstCall = 0;         // Formatting flag
@@ -130,7 +131,16 @@ int main(int argc, char *argv[]) {
 	// the right symbols, and that's not done yet.
 	// fprintf(stderr, "%ld glyphs\n", face->num_glyphs);
 
-	printf("const uint8_t %sBitmaps[] PROGMEM = {\n  ", fontName);
+	printf("with Interfaces; use Interfaces;\n\n");
+	printf("package %s is\n\n", fontName);
+        printf("   type Bitmap_Glyph is record\n");
+        printf("      BitmapOffset : Unsigned_16;\n");
+        printf("      Width, Height : Unsigned_8;\n");
+        printf("      X_Advance : Unsigned_8;\n");
+        printf("      X_Offset, Y_Offset : Integer_8;\n");
+        printf("   end record;\n\n");
+
+	printf("   %sBitmaps : constant array (Positive range <>) of Unsigned_8 := (\n  ", fontName);
 
 	// Process glyphs and output huge bitmap data array
 	for(i=first, j=0; i<=last; i++, j++) {
@@ -193,12 +203,13 @@ int main(int argc, char *argv[]) {
 		FT_Done_Glyph(glyph);
 	}
 
-	printf(" };\n\n"); // End bitmap array
+	printf(" );\n\n"); // End bitmap array
 
 	// Output glyph attributes table (one per character)
-	printf("const GFXglyph %sGlyphs[] PROGMEM = {\n", fontName);
+	printf("%sGlyphs : constant array (Positive range <>) of Bitmap_Glyph := (\n",
+               fontName);
 	for(i=first, j=0; i<=last; i++, j++) {
-		printf("  { %5d, %3d, %3d, %3d, %4d, %4d }",
+		printf("  ( %5d, %3d, %3d, %3d, %4d, %4d )",
 		  table[j].bitmapOffset,
 		  table[j].width,
 		  table[j].height,
@@ -206,27 +217,34 @@ int main(int argc, char *argv[]) {
 		  table[j].xOffset,
 		  table[j].yOffset);
 		if(i < last) {
-			printf(",   // 0x%02X", i);
+			printf(",   -- 0x%02X", i);
 			if((i >= ' ') && (i <= '~')) {
 				printf(" '%c'", i);
 			}
 			putchar('\n');
 		}
 	}
-	printf(" }; // 0x%02X", last);
+	printf(" ); -- 0x%02X", last);
 	if((last >= ' ') && (last <= '~')) printf(" '%c'", last);
 	printf("\n\n");
 
+	printf("   First : constant Unsigned_8 := 0x%02X;\n", first);
+	printf("   Last  : constant Unsigned_8 := 0x%02X;\n", last);
+	printf("   Y_Advance: constant Unsigned_8 := %ld;\n",
+               face->size->metrics.height >> 6);
+
 	// Output font structure
-	printf("const GFXfont %s PROGMEM = {\n", fontName);
-	printf("  (uint8_t  *)%sBitmaps,\n", fontName);
-	printf("  (GFXglyph *)%sGlyphs,\n", fontName);
-	printf("  0x%02X, 0x%02X, %ld };\n\n",
-	  first, last, face->size->metrics.height >> 6);
-	printf("// Approx. %d bytes\n",
-	  bitmapOffset + (last - first + 1) * 7 + 7);
+	/* printf("const GFXfont %s PROGMEM = {\n", fontName); */
+	/* printf("  (uint8_t  *)%sBitmaps,\n", fontName); */
+	/* printf("  (GFXglyph *)%sGlyphs,\n", fontName); */
+	/* printf("  0x%02X, 0x%02X, %ld };\n\n", */
+	/*   first, last, face->size->metrics.height >> 6); */
+	/* printf("   -- Approx. %d bytes\n", */
+	/*   bitmapOffset + (last - first + 1) * 7 + 7); */
 	// Size estimate is based on AVR struct and pointer sizes;
 	// actual size may vary.
+
+	printf("end %s;\n", fontName);
 
 	FT_Done_FreeType(library);
 
