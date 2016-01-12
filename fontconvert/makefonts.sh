@@ -17,7 +17,7 @@ inpath=~/Desktop/freefont/
 outpath=../Fonts/
 fonts=(FreeMono FreeSans FreeSerif)
 styles=("" Bold Italic BoldItalic Oblique BoldOblique)
-sizes=(9 12 18 24)
+sizes=(9 12 18 24 32)
 
 for f in ${fonts[*]}
 do
@@ -29,8 +29,8 @@ do
 			infile=$inpath$f$st".ttf"
 			if [ -f $infile ] # Does source combination exist?
 			  then
-				outfile=$outpath$f$st$si"pt7b.h"
-#				printf "%s %s %s > %s\n" $convert $infile $si $outfile
+				outfile=$outpath"giza-bitmap_fonts-"$f$st$si"pt7b.ads"
+				printf "%s %s %s > %s\n" $convert $infile $si $outfile
 				$convert $infile $si > $outfile
 			fi
 		done
