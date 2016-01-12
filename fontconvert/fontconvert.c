@@ -32,7 +32,7 @@ void enbit(uint8_t value) {
 	if(value) sum |= bit;    // Set bit if needed
 	if(!(bit >>= 1)) {       // Advance to next bit, end of byte reached?
 		if(!firstCall) { // Format output table nicely
-			if(++row >= 12) {        // Last entry on line?
+			if(++row >= 9) {        // Last entry on line?
 				printf(",\n  "); //   Newline format output
 				row = 0;         //   Reset row counter
 			} else {                 // Not end of line
@@ -132,15 +132,10 @@ int main(int argc, char *argv[]) {
 	// fprintf(stderr, "%ld glyphs\n", face->num_glyphs);
 
 	printf("with Interfaces; use Interfaces;\n\n");
-	printf("package %s is\n\n", fontName);
-        printf("   type Bitmap_Glyph is record\n");
-        printf("      BitmapOffset : Unsigned_16;\n");
-        printf("      Width, Height : Unsigned_8;\n");
-        printf("      X_Advance : Unsigned_8;\n");
-        printf("      X_Offset, Y_Offset : Integer_8;\n");
-        printf("   end record;\n\n");
+	printf("package Giza.Bitmap_Fonts.%s is\n\n", fontName);
 
-	printf("   %sBitmaps : constant array (Positive range <>) of Unsigned_8 := (\n  ", fontName);
+	printf("   %sBitmaps : aliased constant Font_Bitmap := (\n  ",
+               fontName);
 
 	// Process glyphs and output huge bitmap data array
 	for(i=first, j=0; i<=last; i++, j++) {
@@ -206,7 +201,7 @@ int main(int argc, char *argv[]) {
 	printf(" );\n\n"); // End bitmap array
 
 	// Output glyph attributes table (one per character)
-	printf("%sGlyphs : constant array (Positive range <>) of Bitmap_Glyph := (\n",
+	printf("%sGlyphs : aliased constant Glyph_Array := (\n",
                fontName);
 	for(i=first, j=0; i<=last; i++, j++) {
 		printf("  ( %5d, %3d, %3d, %3d, %4d, %4d )",
@@ -228,23 +223,15 @@ int main(int argc, char *argv[]) {
 	if((last >= ' ') && (last <= '~')) printf(" '%c'", last);
 	printf("\n\n");
 
-	printf("   First : constant Unsigned_8 := 0x%02X;\n", first);
-	printf("   Last  : constant Unsigned_8 := 0x%02X;\n", last);
-	printf("   Y_Advance: constant Unsigned_8 := %ld;\n",
-               face->size->metrics.height >> 6);
-
 	// Output font structure
-	/* printf("const GFXfont %s PROGMEM = {\n", fontName); */
-	/* printf("  (uint8_t  *)%sBitmaps,\n", fontName); */
-	/* printf("  (GFXglyph *)%sGlyphs,\n", fontName); */
-	/* printf("  0x%02X, 0x%02X, %ld };\n\n", */
-	/*   first, last, face->size->metrics.height >> 6); */
-	/* printf("   -- Approx. %d bytes\n", */
-	/*   bitmapOffset + (last - first + 1) * 7 + 7); */
-	// Size estimate is based on AVR struct and pointer sizes;
-	// actual size may vary.
+	printf("   Font : Bitmap_Font :=\n");
+        printf("     (%sBitmaps'Access,\n", fontName);
+        printf("      %sGlyphs'Access,\n", fontName);
+	printf("      16#%02X#,\n", first);
+	printf("      16#%02X#,\n", last);
+	printf("      %ld);\n", face->size->metrics.height >> 6);
 
-	printf("end %s;\n", fontName);
+	printf("end Giza.Bitmap_Fonts.%s;\n", fontName);
 
 	FT_Done_FreeType(library);
 
