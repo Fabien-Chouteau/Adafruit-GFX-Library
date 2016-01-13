@@ -131,7 +131,6 @@ int main(int argc, char *argv[]) {
 	// the right symbols, and that's not done yet.
 	// fprintf(stderr, "%ld glyphs\n", face->num_glyphs);
 
-	printf("with Interfaces; use Interfaces;\n\n");
 	printf("package Giza.Bitmap_Fonts.%s is\n\n", fontName);
 
 	printf("   %sBitmaps : aliased constant Font_Bitmap := (\n  ",
@@ -198,13 +197,13 @@ int main(int argc, char *argv[]) {
 		FT_Done_Glyph(glyph);
 	}
 
-	printf(" );\n\n"); // End bitmap array
+	printf(");\n\n"); // End bitmap array
 
 	// Output glyph attributes table (one per character)
-	printf("%sGlyphs : aliased constant Glyph_Array := (\n",
+	printf("   %sGlyphs : aliased constant Glyph_Array := (\n",
                fontName);
 	for(i=first, j=0; i<=last; i++, j++) {
-		printf("  ( %5d, %3d, %3d, %3d, %4d, %4d )",
+		printf("  (%d, %d, %d, %d, %d, %d)",
 		  table[j].bitmapOffset,
 		  table[j].width,
 		  table[j].height,
@@ -219,7 +218,7 @@ int main(int argc, char *argv[]) {
 			putchar('\n');
 		}
 	}
-	printf(" ); -- 0x%02X", last);
+	printf("); -- 0x%02X", last);
 	if((last >= ' ') && (last <= '~')) printf(" '%c'", last);
 	printf("\n\n");
 

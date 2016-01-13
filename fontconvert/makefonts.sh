@@ -29,7 +29,7 @@ do
 			infile=$inpath$f$st".ttf"
 			if [ -f $infile ] # Does source combination exist?
 			  then
-				outfile=$outpath"giza-bitmap_fonts-"$f$st$si"pt7b.ads"
+                                outfile=$outpath$(echo "giza-bitmap_fonts-"$f$st$si"pt7b.ads" | tr '[:upper:]' '[:lower:]')
 				printf "%s %s %s > %s\n" $convert $infile $si $outfile
 				$convert $infile $si > $outfile
 			fi
